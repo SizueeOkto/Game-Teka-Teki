@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teka-Teki Paradoks: Edisi Tidak Mungkin</title>
+    <style>
+        /* --- GAYA UMUM (STYLE) --- */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            max-width: 750px;
+            width: 100%;
+            overflow: hidden;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            color: #2a5298;
+            margin: 20px 0;
+            font-weight: 700;
+        }
+
+        h2 {
+            color: #444;
+            font-weight: 600;
+            margin: 20px;
+            font-size: 1.3em;
+        }
+
+        p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin: 15px 30px;
+        }
+
+        img {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            display: block;
+            filter: brightness(0.9);
+        }
+
+        button {
+            background-color: #2a5298;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        button:hover {
+            background-color: #1e3c72;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #choices-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .choice-btn {
+            width: 90%;
+            margin: 8px 0;
+            background-color: #f0f0f0;
+            color: #333;
+            border: 2px solid transparent;
+            text-align: left;
+            font-size: 1em;
+        }
+        
+        .choice-btn:hover:not(:disabled) {
+            background-color: #e0e0e0;
+            border-color: #2a5298;
+        }
+
+        .choice-btn.correct {
+            background-color: #48bb78;
+            color: white;
+            border-color: #2f855a;
+        }
+
+        .choice-btn.wrong {
+            background-color: #f56565;
+            color: white;
+            border-color: #c53030;
+        }
+
+        #feedback {
+            font-weight: 600;
+            min-height: 60px;
+            margin-top: 20px;
+            font-style: italic;
+            color: #555;
+        }
+
+        #score-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #2a5298;
+        }
+        
+        #level-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #1e3c72;
+        }
+
+        .screen {
+            padding: 20px;
+        }
+
+        #game-screen, #end-screen {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- --- LAYAR AWAL --- -->
+        <div id="start-screen" class="screen">
+            <h1>Teka-Teki Paradoks</h1>
+            <p>Selamat datang di labirin pikiran yang melawan hukum alam dan akal sehat.</p>
+            <p>Di sini, jawaban yang benar seringkali adalah jawaban yang paling tidak masuk akal. Pertanyaan akan membingungkan, kondisi tidak mungkin, dan logika hanyalah mitos belaka.</p>
+            <p>Apakah Anda siap?</p>
+            <button onclick="startGame()">Masuki Paradoks</button>
+        </div>
+
+        <!-- --- LAYAR GAME --- -->
+        <div id="game-screen" class="screen">
+            <div id="level-display">Level: 1</div>
+            <div id="score-display">Skor: 0</div>
+            <img id="puzzle-image" src="" alt="Gambar Teka-Teki">
+            <h2 id="question-text"></h2>
+            <div id="choices-container"></div>
+            <p id="feedback"></p>
+            <button id="next-button" onclick="nextPuzzle()" style="display: none;">Lanjutkan</button>
+        </div>
+
+        <!-- --- LAYAR AKHIR --- -->
+        <div id="end-screen" class="screen">
+            <h1>Anda Keluar dari Labirin</h1>
+            <p id="final-score"></p>
+            <p id="final-message"></p>
+            <button onclick="location.reload()">Hadapi Paradoks Lagi</button>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIKA GAME (SCRIPT) ---
+
+        const puzzles = [
+            // LEVEL 1-10: PERKENALAN KETIDAKMUNGKINAN
+            {
+                image: 'https://images.pexels.com/photos/1547813/pexels-photo-1547813.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Jika sawah ini memiliki -3 batang padi, dan seekor kambing memakannya, berapa jumlah padi yang tersisa?",
+                choices: ["-4", "0", "Masih -3", "Seekor kambing yang kenyang"],
+                correctAnswer: 2,
+                explanation: "Anda tidak bisa mengurangi sesuatu yang tidak ada (negatif). Jumlahnya tetap -3, karena kondisi awalnya sudah mustahil."
+            },
+            {
+                image: 'https://images.pexels.com/photos/2583852/pexels-photo-2583852.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Ombak di pantai ini bergerak diam-diam dan menghilang dengan gemuruh. Jika ombak ini adalah seorang librarian, apa yang akan ia katakan?",
+                choices: ["'Diam!'", "'Tolong kembalikan buku ini'", "'Baca dengan perlahan'", "'Hanya bisikan yang diizinkan'"],
+                correctAnswer: 0,
+                explanation: "Kontradiksinya adalah 'bergerak diam-diam'. Seorang librarian meminta ketenangan. Ombak yang 'diam' akan meminta orang lain untuk 'diam'."
+            },
+            {
+                image: 'https://images.pexels.com/photos/236047/pexels-photo-236047.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Candi ini dibangun dalam waktu 7/8 hari. Jika seorang tukang batu meletakkan batu pertama pada hari Senin, kapan ia meletakkan batu terakhir?",
+                choices: ["Minggu pagi", "Senin malam", "Tidak pernah", "Jumat ke-13"],
+                correctAnswer: 2,
+                explanation: "Anda tidak bisa membangun sesuatu dalam pecahan hari yang kurang dari satu. Kondisinya tidak mungkin, jadi prosesnya tidak pernah terjadi."
+            },
+            {
+                image: 'https://images.pexels.com/photos/2585966/pexels-photo-2585966.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Di perairan ini, ikan berjalan di atas air dan burung berenang di dasar laut. Apa pekerjaan yang paling cocok untuk seekor ikan di sini?",
+                choices: ["Aktor", "Pilot", "Penyelam", "Tukang kayu"],
+                correctAnswer: 1,
+                explanation: "Karena ikan sudah terbiasa 'berjalan di atas air', menjadi pilot adalah karir yang logis baginya."
+            },
+            {
+                image: 'https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Gunung ini memiliki ketinggian -500 meter di bawah permukaan laut. Jika seorang pendaki mencapai puncaknya, ke mana ia akan melihat?",
+                choices: ["Ke atas", "Ke bawah", "Ke dalam dirinya sendiri", "Ke lubang di bawahnya"],
+                correctAnswer: 1,
+                explanation: "Jika gunung berada di bawah permukaan laut, 'puncaknya' adalah titik terendah. Mencapainya berarti melihat ke bawah."
+            },
+            {
+                image: 'https://images.pexels.com/photos/1001682/pexels-photo-1001682.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Komodo di sini adalah vegetarian dan takut pada sayuran. Jika ia lapar, apa yang akan ia makan?",
+                choices: ["Buah", "Daging", "Pikirannya sendiri", "Tidak ada, ia akan tetap lapar"],
+                correctAnswer: 3,
+                explanation: "Sebagai vegetarian yang takut pada sayuran, ia tidak punya pilihan makanan. Kontradiksi ini membuatnya tidak bisa makan apa-apa."
+            },
+            {
+                image: 'https://images.pexels.com/photos/414612/pexels-photo-414612.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Rumah adat ini memiliki 100 pintu yang tidak bisa dibuka dan 50 jendela yang tidak bisa ditutup. Bagaimana cara memasuki rumah ini?",
+                choices: ["Melalui atap", "Dengan kunci palsu", "Tidak ada cara", "Dengan membayangkan Anda sudah di dalam"],
+                correctAnswer: 3,
+                explanation: "Secara fisik tidak mungkin. Satu-satunya cara 'memasuki' sesuatu yang tidak bisa dimasuki adalah melalui imajinasi."
+            },
+            {
+                image: 'https://images.pexels.com/photos/209831/pexels-photo-209831.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Danau ini sangat dalam sehingga dasarnya berada di masa depan. Jika Anda menjatuhkan koin hari ini, kapan koin itu akan menyentuh dasar?",
+                choices: ["Besok", "Tidak pernah", "Saat koin itu menjadi antik", "Saat waktu berhenti"],
+                correctAnswer: 1,
+                explanation: "Jika dasarnya di masa depan, koin yang jatuh hari ini tidak akan pernah bisa mencapainya, karena ia akan selalu berada di 'sekarang'."
+            },
+            {
+                image: 'https://images.pexels.com/photos/1540406/pexels-photo-1540406.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Wayang kulit ini menceritakan kisah yang belum pernah terjadi. Siapa tokoh utamanya?",
+                choices: ["Anda", "Penonton", "Dalang", "Seorang yang tidak ada"],
+                correctAnswer: 0,
+                explanation: "Kisah yang belum terjadi adalah kisah masa depan Anda. Anda adalah satu-satunya tokoh utama dalam hidup Anda sendiri."
+            },
+            {
+                image: 'https://images.pexels.com/photos/386009/pexels-photo-386009.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Kota ini memiliki satu jalan yang membentuk lingkaran sempurna tanpa ujung. Jika Anda berjalan di jalan ini, ke mana Anda akan pergi?",
+                choices: ["Ke mana-mana", "Ke mana pun Anda mulai", "Tidak ke mana-mana", "Ke pusat kota"],
+                correctAnswer: 2,
+                explanation: "Berjalan di lingkaran tanpa ujung berarti Anda tidak benar-benar 'pergi' ke mana pun. Anda hanya berputar di tempat."
+            },
+            // LEVEL 11-20: PENINGKATAN PARADOKS
+            {
+                image: 'https://images.pexels.com/photos/447187/pexels-photo-447187.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Hutan ini berisi 1 juta pohon yang semuanya berbisik dengan suara yang sama persis. Jika satu pohon jatuh, berapa banyak bisikan yang terdengar?",
+                choices: ["999.999", "1 juta", "Nol", "Satu ledakan"],
+                correctAnswer: 2,
+                explanation: "Jika semua bisikannya sama, jatuhnya satu pohon tidak akan mengubah jumlah 'bisikan' yang terdengar. Suara jatuhnya bukan bisikan."
+            },
+            {
+                image: 'https://images.pexels.com/photos/1420420/pexels-photo-1420420.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Apa warna dari angka 7/3?",
+                choices: ["Biru", "Tidak berwarna", "Kuning Pucat", "Ungu Fraksional"],
+                correctAnswer: 1,
+                explanation: "Angka tidak memiliki warna. Pertanyaan ini adalah jebakan untuk membuat Anda berpikir secara visual tentang sesuatu yang abstrak."
+            },
+            {
+                image: 'https://images.pexels.com/photos/2071882/pexels-photo-2071882.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Kapal ini berlayar dengan mengarungi padang pasir. Apa yang menjadi kompasnya?",
+                choices: ["Matahari", "Bintang", "Rasa haus", "Arah angin yang tidak ada"],
+                correctAnswer: 2,
+                explanation: "Di padang pasir, satu-satunya hal yang pasti dan terus-menerus adalah rasa haus. Itulah satu-satunya 'kompas' yang bisa diandalkan."
+            },
+            {
+                image: 'https://images.pexels.com/photos/3310671/pexels-photo-3310671.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Jika setiap undakan sawah ini adalah sebuah catatan, dan petani memainkannya dari bawah ke atas, apakah yang ia hasilkan?",
+                choices: ["Lagu yang naik nada", "Keheningan", "Sebuah tangga nada yang terbalik", "Lagu yang selalu kembali ke awal"],
+                correctAnswer: 3,
+                explanation: "Petani harus turun untuk naik lagi. Jadi, setiap kali ia 'memainkan' dari bawah ke atas, ia harus kembali ke bawah untuk memulai lagi."
+            },
+            {
+                image: 'https://images.pexels.com/photos/236617/pexels-photo-236617.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Candi ini dibangun untuk menghormati dewa yang tidak suka dipuja. Apa ritual yang dilakukan di sini?",
+                choices: ["Meninggalkan persembahan", "Berdoa dalam keheningan", "Tidak melakukan apa-apa", "Mengabaikan candi"],
+                correctAnswer: 2,
+                explanation: "Jika dewa tidak suka dipuja, ritual yang paling tepat adalah tidak melakukan ritual apa pun. Kehadiran tanpa tindakan adalah penghormatan tertinggi."
+            },
+            {
+                image: 'https://images.pexels.com/photos/1319526/pexels-photo-1319526.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Air terjun ini mengalir ke atas. Dari mana asalnya?",
+                choices: ["Dari laut", "Dari matahari", "Dari kesedihan gunung", "Dari lubang di gravitasi"],
+                correctAnswer: 3,
+                explanation: "Hanya lubang di gravitasi yang bisa membuat air mengalir ke atas. Ini adalah satu-satunya penjelasan (fiktif) yang logis untuk kondisi yang mustahil."
+            },
+            {
+                image: 'https://images.pexels.com/photos/912110/pexels-photo-912110.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Gunung berapi ini meletuskan es batu. Apa peringatan yang akan diberikan?",
+                choices: ["'Waspada gempa es'", "'Suhu akan naik turun'", "'Jangan berdiri di dekat kulkas'", "'Awas, terjangan dingin!'"],
+                correctAnswer: 3,
+                explanation: "Jika yang keluar adalah es, maka ancamannya adalah 'terjangan dingin', bukan 'lava panas'."
+            },
+            {
+                image: 'https://images.pexels.com/photos/4590358/pexels-photo-4590358.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Kota ini memiliki 0 populasi, tetapi lalu lintasnya selalu macet. Siapa yang menyebabkan kemacetan?",
+                choices: ["Hantu", "Mobil tanpa pengemudi", "Bayangan", "Waktu"],
+                correctAnswer: 3,
+                explanation: "Kota tanpa orang tidak bisa macet oleh kendaraan. Satu-satunya 'hal' yang bisa 'macet' atau berjalan sangat lambat di kota kosong adalah waktu itu sendiri."
+            },
+            {
+                image: 'https://images.pexels.com/photos/38537/woodland-forest-fog-path-38537.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Jalan setapak ini mengarah ke dua arah yang berlawanan pada saat yang sama. Jika Anda mengikuti jalan ini, di mana Anda akan berakhir?",
+                choices: ["Di awal", "Di dua tempat", "Di tengah", "Di persimpangan realitas"],
+                correctAnswer: 3,
+                explanation: "Mengikuti jalan yang membelah realitas akan membawa Anda ke persimpangan antara dua realitas tersebut."
+            },
+            {
+                image: 'https://images.pexels.com/photos/416676/pexels-photo-416676.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Pantai ini memiliki pasir yang terbuat dari kenangan yang dilupakan. Apa yang akan Anda temukan jika Anda menggalinya?",
+                choices: ["Tidak ada", "Sebuah penyesalan", "Kunci yang hilang", "Deja vu"],
+                correctAnswer: 0,
+                explanation: "Jika pasirnya adalah kenangan yang dilupakan, maka secara definisi tidak ada yang bisa menemukan atau mengingatnya kembali."
+            },
+            // LEVEL 21-30: DIMENSI KEDELAMAN
+            {
+                image: 'https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Api biru ini terasa dingin jika disentuh. Apa yang akan terjadi jika Anda membakar es krim dengannya?",
+                choices: ["Es krimnya akan membeku", "Es krimnya akan meleleh", "Api akan mati", "Terjadi ledakan rasa"],
+                correctAnswer: 0,
+                explanation: "Jika apinya dingin, maka ia akan membekukan es krim, bukan melelehkannya. Logika di balik pertanyaan adalah membalikkan sifat dasar api."
+            },
+            {
+                image: 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Gurun ini hujan setiap hari selama 1000 tahun. Apa yang ada di sana sekarang?",
+                choices: ["Sebuah hutan hujan", "Danau yang sangat dalam", "Gurun yang sangat basah", "Mitos tentang gurun kering"],
+                correctAnswer: 3,
+                explanation: "Kondisi saat ini (hujan setiap hari) bertentangan dengan definisi 'gurun'. Jadi, yang ada hanyalah mitos tentang bagaimana gurun itu 'seharusnya' (kering)."
+            },
+            {
+                image: 'https://images.pexels.com/photos/5483077/pexels-photo-5483077.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Petani di sawah ini menanam 9/10 dari satu benih padi. Berapa banyak yang ia panen?",
+                choices: ["9/10 padi", "Satu padi utuh", "Tidak ada", "Pecahan kebingungan"],
+                correctAnswer: 2,
+                explanation: "Anda tidak bisa menanam pecahan benih. Tidak ada yang ditanam, jadi tidak ada yang bisa dipanen."
+            },
+            {
+                image: 'https://images.pexels.com/photos/298842/pexels-photo-298842.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Pasar ini menjual hal-hal yang tidak ada. Apa barang termahal di sana?",
+                choices: ["Masa depan", "Kebahagiaan abadi", "Kesunyian", "Jawaban untuk pertanyaan ini"],
+                correctAnswer: 3,
+                explanation: "Ini adalah meta-paradoks. Jawaban untuk pertanyaan ini adalah sesuatu yang 'tidak ada' sampai Anda menemukannya, membuatnya menjadi barang termahal di pasar yang menjual ketiadaan."
+            },
+            {
+                image: 'https://images.pexels.com/photos/3408744/pexels-photo-3408744.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Jembatan ini menghubungkan titik A ke titik A. Untuk apa jembatan ini dibangun?",
+                choices: ["Sebagai monumen kesia-siaan", "Agar orang bisa berjalan-jalan dan kembali ke tempat yang sama", "Untuk membingungkan GPS", "Sebagai pintu masuk ke lingkaran setan"],
+                correctAnswer: 1,
+                explanation: "Fungsinya adalah untuk tujuan rekreasi yang nihil: berjalan di suatu tempat hanya untuk kembali ke titik awal."
+            },
+            {
+                image: 'https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Pulau ini melayang di langit. Apa yang ada di bawahnya?",
+                choices: ["Lautan awan", "Langit yang lain", "Bayangan pulau yang jatuh", "Angka 8"],
+                correctAnswer: 3,
+                explanation: "Simbol 'tak hingga' (∞) terlihat seperti angka 8 yang berbaring. Pulau melayang adalah representasi visual dari ketidakterbatasan, jadi di bawahnya adalah simbolnya."
+            },
+            {
+                image: 'https://images.pexels.com/photos/41949/earth-earth-at-night-night-lights-41949.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Jika Bumi adalah pikiran, dan lampu-lampu kota adalah neuron, apa artinya mati lampu?",
+                choices: ["Amnesia global", "Tidur", "Akhir dari sebuah pemikiran", "Pemadaman daya kreatif"],
+                correctAnswer: 2,
+                explanation: "Dalam metafora ini, setiap pikiran adalah aktivitas neuron (lampu kota). Mati lampu berarti satu 'pikiran' telah berakhir."
+            },
+            {
+                image: 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Gunung ini adalah tempat pertemuan para rahasia. Apa yang mereka bicarakan?",
+                choices: ["Cara untuk menjadi diketahui", "Tempat persembunyian yang lebih baik", "Cuaca", "Kematian"],
+                correctAnswer: 0,
+                explanation: "Rahasia ingin diketahui, itulah sifatnya. Mereka berkumpul untuk membahas bagaimana cara mereka bisa terungkap."
+            },
+            {
+                image: 'https://images.pexels.com/photos/349500/pexels-photo-349500.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Bayangan ini memiliki bayangan sendiri. Apa warna bayangan dari bayangan itu?",
+                choices: ["Hitam", "Abu-abu", "Transparan", "Kegelapan ganda"],
+                correctAnswer: 2,
+                explanation: "Bayangan adalah ketiadaan cahaya. Bayangan dari ketiadaan adalah ketiadaan yang lebih murni lagi, yang bisa dianggap transparan."
+            },
+            {
+                image: 'https://images.pexels.com/photos/462162/pexels-photo-462162.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
+                question: "Pantai ini adalah tepi dari dunia. Apa yang ada di luar tepi?",
+                choices: ["Lautan tak berujung", "Langit", "Tulisan 'The End'", "Pertanyaan berikutnya"],
+                correctAnswer: 2,
+                explanation: "Jika ini adalah akhir dunia (seperti dalam film), maka yang ada di luar adalah tulisan 'The End'."
+            }
+        ];
+
+        let currentPuzzleIndex = 0;
+        let score = 0;
+
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const puzzleImage = document.getElementById('puzzle-image');
+        const questionText = document.getElementById('question-text');
+        const choicesContainer = document.getElementById('choices-container');
+        const feedbackText = document.getElementById('feedback');
+        const nextButton = document.getElementById('next-button');
+        const scoreDisplay = document.getElementById('score-display');
+        const levelDisplay = document.getElementById('level-display');
+        const finalScoreText = document.getElementById('final-score');
+        const finalMessageText = document.getElementById('final-message');
+
+        function startGame() {
+            startScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+            currentPuzzleIndex = 0;
+            score = 0;
+            scoreDisplay.textContent = `Skor: ${score}`;
+            loadPuzzle();
+        }
+
+        function loadPuzzle() {
+            if (currentPuzzleIndex >= puzzles.length) {
+                endGame();
+                return;
+            }
+
+            const currentPuzzle = puzzles[currentPuzzleIndex];
+            puzzleImage.src = currentPuzzle.image;
+            questionText.textContent = currentPuzzle.question;
+            feedbackText.textContent = '';
+            nextButton.style.display = 'none';
+            levelDisplay.textContent = `Level: ${currentPuzzleIndex + 1}`;
+
+            choicesContainer.innerHTML = '';
+            currentPuzzle.choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.classList.add('choice-btn');
+                button.textContent = choice;
+                button.onclick = () => selectAnswer(index, currentPuzzle.correctAnswer, currentPuzzle.explanation);
+                choicesContainer.appendChild(button);
+            });
+        }
+
+        function selectAnswer(selectedIndex, correctIndex, explanation) {
+            const buttons = choicesContainer.querySelectorAll('.choice-btn');
+            buttons.forEach(button => button.disabled = true);
+
+            if (selectedIndex === correctIndex) {
+                buttons[selectedIndex].classList.add('correct');
+                feedbackText.textContent = `Tepat sekali. ${explanation}`;
+                score++;
+            } else {
+                buttons[selectedIndex].classList.add('wrong');
+                buttons[correctIndex].classList.add('correct');
+                feedbackText.textContent = `Logika Anda masih normal. ${explanation}`;
+            }
+
+            scoreDisplay.textContent = `Skor: ${score}`;
+            nextButton.style.display = 'inline-block';
+        }
+
+        function nextPuzzle() {
+            currentPuzzleIndex++;
+            loadPuzzle();
+        }
+
+        function endGame() {
+            gameScreen.style.display = 'none';
+            endScreen.style.display = 'block';
+            finalScoreText.textContent = `Skor akhir Anda adalah ${score} dari ${puzzles.length}.`;
+            
+            let message = "";
+            if (score === puzzles.length) {
+                message = "Anda adalah master paradoks. Logika telah menyerah kepada Anda. Mungkin Anda bukan dari dunia ini.";
+            } else if (score >= 20) {
+                message = "Pikiran Anda telah terdistorsi dengan indah. Anda hampir berhasil memecahkan kode realitas semu.";
+            } else if (score >= 10) {
+                message = "Anda mulai melihat retakan di dinding realitas. Terus latih kemampuan berpikir anti-logis Anda.";
+            } else {
+                message = "Akal sehat Anda masih terlalu kuat. Dunia paradoks belum siap untuk Anda, atau sebaliknya.";
+            }
+            finalMessageText.textContent = message;
+        }
+
+    </script>
+</body>
+</html>
